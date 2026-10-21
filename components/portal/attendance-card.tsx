@@ -1,19 +1,17 @@
-import { AlertTriangle, UserCheck } from 'lucide-react'
+'use client'
+
+import { AlertTriangle, ChevronRight, UserCheck } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import {
+  coursePercent,
+  courses,
+  MIN_ATTENDANCE,
+  overallAttendance,
+  totalAttended,
+  totalClasses,
+} from '@/lib/portal-data'
 import { SectionCard } from './section-card'
-
-const MIN_REQUIRED = 75
-
-const courses = [
-  { code: 'CS 341', name: 'Distributed Systems', attended: 22, total: 23 },
-  { code: 'CS 320', name: 'Machine Learning', attended: 19, total: 21 },
-  { code: 'MA 260', name: 'Linear Algebra', attended: 17, total: 20 },
-  { code: 'HU 210', name: 'Ethics in Technology', attended: 11, total: 15 },
-]
-
-const totalAttended = courses.reduce((sum, c) => sum + c.attended, 0)
-const totalClasses = courses.reduce((sum, c) => sum + c.total, 0)
-const overall = Math.round((totalAttended / totalClasses) * 100)
+import { useAttendanceDialog } from './attendance-dialog'
 
 function ProgressRing({ value }: { value: number }) {
   const radius = 42
@@ -44,7 +42,8 @@ function ProgressRing({ value }: { value: number }) {
 }
 
 export function AttendanceCard() {
-  const atRisk = courses.filter((c) => Math.round((c.attended / c.total) * 100) < MIN_REQUIRED)
+  const { openAttendance } = useAttendanceDialog()
+  const atRisk = courses.filter((c) => coursePercent(c) < MIN_ATTENDANCE)
 
   return (
     <SectionCard
@@ -53,20 +52,30 @@ export function AttendanceCard() {
       description="Live sync with smart-card check-ins"
       icon={UserCheck}
       action={
-        <span className="hidden rounded-full bg-success/10 px-2.5 py-1 text-xs font-medium text-success sm:inline">
-          On track
-        </span>
+        <button
+          type="button"
+          onClick={() => openAttendance()}
+          className="inline-flex items-center gap-0.5 text-sm font-medium text-primary hover:underline"
+        >
+          Details
+          <ChevronRight className="size-4" aria-hidden="true" />
+        </button>
       }
     >
-      <div className="flex items-center gap-5 rounded-2xl bg-muted/60 p-4">
-        <ProgressRing value={overall} />
+      <button
+        type="button"
+        onClick={() => openAttendance()}
+        aria-label={`Open attendance details, ${overallAttendance}% overall`}
+        className="flex w-full items-center gap-5 rounded-2xl bg-muted/60 p-4 text-left transition-colors hover:bg-accent"
+      >
+        <ProgressRing value={overallAttendance} />
         <div className="space-y-1">
           <p className="text-sm text-muted-foreground">
-            <span className="font-semibold text-foreground">{totalAttended}</span> of {totalClasses}{' '}
-            sessions attended
+            <span className="font-semibold text-foreground">{totalAttended}</span> of {totalClasses} sessions
+            attended
           </p>
           <p className="text-sm text-muted-foreground">
-            Minimum required: <span className="font-medium text-foreground">{MIN_REQUIRED}%</span>
+            Minimum required: <span className="font-medium text-foreground">{MIN_ATTENDANCE}%</span>
           </p>
           {atRisk.length > 0 && (
             <p className="inline-flex items-center gap-1.5 text-sm font-medium text-warning-foreground">
@@ -75,36 +84,42 @@ export function AttendanceCard() {
             </p>
           )}
         </div>
-      </div>
+      </button>
 
-      <ul className="mt-5 space-y-4">
+      <ul className="mt-3 space-y-1">
         {courses.map((course) => {
-          const pct = Math.round((course.attended / course.total) * 100)
-          const low = pct < MIN_REQUIRED
+          const pct = coursePercent(course)
+          const low = pct < MIN_ATTENDANCE
           return (
             <li key={course.code}>
-              <div className="flex items-baseline justify-between gap-3 text-sm">
-                <span className="min-w-0 truncate">
-                  <span className="font-mono text-xs text-muted-foreground">{course.code}</span>{' '}
-                  <span className="font-medium">{course.name}</span>
-                </span>
-                <span className={cn('shrink-0 font-semibold tabular-nums', low && 'text-destructive')}>
-                  {pct}%
-                </span>
-              </div>
-              <div
-                className="mt-2 h-2 overflow-hidden rounded-full bg-muted"
-                role="progressbar"
-                aria-valuenow={pct}
-                aria-valuemin={0}
-                aria-valuemax={100}
-                aria-label={`${course.name} attendance`}
+              <button
+                type="button"
+                onClick={() => openAttendance(course.code)}
+                className="group w-full rounded-xl px-2 py-2.5 text-left transition-colors hover:bg-muted/60"
               >
+                <div className="flex items-baseline justify-between gap-3 text-sm">
+                  <span className="min-w-0 truncate">
+                    <span className="font-mono text-xs text-muted-foreground">{course.code}</span>{' '}
+                    <span className="font-medium group-hover:text-primary">{course.name}</span>
+                  </span>
+                  <span className={cn('shrink-0 font-semibold tabular-nums', low && 'text-destructive')}>
+                    {pct}%
+                  </span>
+                </div>
                 <div
-                  className={cn('h-full rounded-full', low ? 'bg-destructive' : 'bg-primary')}
-                  style={{ width: `${pct}%` }}
-                />
-              </div>
+                  className="mt-2 h-2 overflow-hidden rounded-full bg-muted"
+                  role="progressbar"
+                  aria-valuenow={pct}
+                  aria-valuemin={0}
+                  aria-valuemax={100}
+                  aria-label={`${course.name} attendance`}
+                >
+                  <div
+                    className={cn('h-full rounded-full', low ? 'bg-destructive' : 'bg-primary')}
+                    style={{ width: `${pct}%` }}
+                  />
+                </div>
+              </button>
             </li>
           )
         })}

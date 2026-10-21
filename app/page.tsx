@@ -1,5 +1,6 @@
 import { AssignmentsCard } from '@/components/portal/assignments-card'
 import { AttendanceCard } from '@/components/portal/attendance-card'
+import { AttendanceDialogProvider } from '@/components/portal/attendance-dialog'
 import { BottomNav } from '@/components/portal/bottom-nav'
 import { EventsCard } from '@/components/portal/events-card'
 import { Hero } from '@/components/portal/hero'
@@ -9,7 +10,7 @@ import { TopBar } from '@/components/portal/top-bar'
 
 export default function Page() {
   return (
-    <>
+    <AttendanceDialogProvider>
       <TopBar />
       <main className="mx-auto max-w-6xl px-4 pb-32 sm:px-6">
         <Hero />
@@ -36,6 +37,6 @@ export default function Page() {
       </main>
       <BottomNav />
       <StudyAssistant />
-    </>
+    </AttendanceDialogProvider>
   )
 }
