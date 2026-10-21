@@ -4,6 +4,7 @@ import { BottomNav } from '@/components/portal/bottom-nav'
 import { EventsCard } from '@/components/portal/events-card'
 import { Hero } from '@/components/portal/hero'
 import { LostFoundCard } from '@/components/portal/lost-found-card'
+import { StudyAssistant } from '@/components/portal/study-assistant'
 import { TopBar } from '@/components/portal/top-bar'
 
 export default function Page() {
@@ -34,6 +35,7 @@ export default function Page() {
         </footer>
       </main>
       <BottomNav />
+      <StudyAssistant />
     </>
   )
 }
